@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
-import { Route, Link } from 'react-router-dom'
+import { Route } from 'react-router-dom'
 import '../css/App.css';
 import Home from './Home.js'
 import Search from './Search.js'
-import { getAll, update } from '../BooksApi.js';
+import { get, getAll, update } from '../BooksApi.js';
 
 class App extends Component {
 
@@ -18,17 +18,40 @@ class App extends Component {
   render() {
     return (
       <div>
-        <div className='list-books-title'>
-          <h1>My Reads</h1>
-        </div>
-            <Route exact path='/' render={props => (
-              <Home books={this.state.books} changeShelf={ this.changeShelf }/>
-            )} />
-            <Route path='/search' render={props => (
-              <Search />
-            )} />
+        <Route exact path='/' render={props => (
+          <Home books={this.state.books} changeShelf={ this.changeShelf }/>
+        )} />
+        <Route path='/search' render={props => (
+          <Search addBook={ this.addBook }
+                  books={ this.state.books }/>
+        )} />
       </div>
     );
+  }
+
+  addBook = evt => {
+    const id = evt.target.id;
+    const val = evt.target.value;
+    update({id: id}, val)
+      .then(res => {
+        get(id)
+          .then(res => {
+            if(!this.state.books.filter(book => book.id = id).length) {
+              this.setState(state => {
+                console.log(state.books);
+                return {books: state.books.concat(res)}
+              });
+            } else {
+              this.setState(state => {
+                state.books.forEach(book => {
+                  if(book.id === id) {
+                    book.shelf = val;
+                  };
+                })
+              });
+            }
+          });
+      });
   }
 
   changeShelf = evt => {
