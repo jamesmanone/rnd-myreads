@@ -3,7 +3,7 @@ import { Route, Link } from 'react-router-dom'
 import '../css/App.css';
 import Home from './Home.js'
 import Search from './Search.js'
-import { getAll } from '../BooksApi.js';
+import { getAll, update } from '../BooksApi.js';
 
 class App extends Component {
 
@@ -31,8 +31,17 @@ class App extends Component {
     );
   }
 
-  changeShelf(evt) {
-    console.log(evt.target);
+  changeShelf = evt => {
+    let id = evt.target.id;
+    let val = evt.target.value
+    update({id: id}, val)
+      .then(res => this.setState(state => {
+        state.books.forEach(book => {
+          if(book.id === id) {
+            book.shelf = val;
+          };
+      });
+    }))
   }
 }
 

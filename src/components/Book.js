@@ -10,7 +10,7 @@ export function Book(props) {
                  alt={ book.title ? book.title : null }
             />
             <span className='book-shelf-changer'>
-              <select defaultValue={ book.shelf ? book.shelf : null } onChange={ props.changeShelf }>
+              <select id={ book.id } defaultValue={ book.shelf ? book.shelf : null } onChange={ props.changeShelf }>
                 <option value='wantToRead'>Want to Read</option>
                 <option value='currentlyReading'>Currently Reading</option>
                 <option value='read'>Read</option>

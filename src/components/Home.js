@@ -15,11 +15,15 @@ class Home extends Component {
           </div>
           <div className='bookshelf-books'>
             <h2>Want to Read</h2>
-            <Book books={ this.props.books.filter(book => book.shelf === 'wantToRead') } />
+            <Book books={ this.props.books.filter(book => book.shelf === 'wantToRead') }
+                  changeShelf={ this.props.changeShelf }
+            />
           </div>
           <div className='bookshelf-books'>
             <h2>Read</h2>
-            <Book books={ this.props.books.filter(book => book.shelf === 'read') } />
+            <Book books={ this.props.books.filter(book => book.shelf === 'read') }
+                  changeShelf={ this.props.changeShelf }
+            />
           </div>
         </div>
       </div>
