@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { Link } from 'react-router-dom'
 import { Book } from './Book';
 
-class Home extends Component {
+export class Home extends Component {
 
   render() {
     return (
@@ -39,5 +39,3 @@ class Home extends Component {
     );
   }
 }
-
-export default Home;

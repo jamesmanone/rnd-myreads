@@ -14,11 +14,23 @@ const headers = {
 
 export const get = (bookId) =>
   fetch(`${api}/books/${bookId}`, { headers })
+    .then(res => {
+      if(!res.ok) {
+        throw new Error('Bad response');
+      }
+      return res;
+    })
     .then(res => res.json())
     .then(data => data.book)
 
 export const getAll = () =>
   fetch(`${api}/books`, { headers })
+    .then(res => {
+      if(!res.ok) {
+        throw new Error('Bad response');
+      }
+      return res;
+    })
     .then(res => res.json())
     .then(data => data.books)
 
@@ -30,7 +42,14 @@ export const update = (book, shelf) =>
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({ shelf })
-  }).then(res => res.json())
+  })
+    .then(res => {
+      if(!res.ok) {
+        throw new Error('Bad response');
+      }
+      return res;
+    })
+    .then(res => res.json())
 
 export const search = (query, maxResults) =>
   fetch(`${api}/search`, {
@@ -40,5 +59,12 @@ export const search = (query, maxResults) =>
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({ query, maxResults })
-  }).then(res => res.json())
+  })
+    .then(res => {
+      if(!res.ok) {
+        throw new Error('Bad response');
+      }
+      return res;
+    })
+    .then(res => res.json())
     .then(data => data.books)
