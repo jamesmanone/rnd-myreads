@@ -4,29 +4,37 @@ import { search } from '../BooksApi.js'
 import { Book } from './Book.js'
 
 export class Search extends Component {
+
   state = {
     q:'',
     results: []
   }
 
-  // This will set state.q to match url search param on browser back event
-  componentWillMount() {
-    this.props.search && this.setState({q: this.props.search})
-  }
-
   // Search for previous on browser back
   componentDidMount() {
-    this.state.q && this.search();  // Short circuit if
+    // setState and populate state.results when App passes in props.search. Not sure this ever gets called
+    this.props.search && this.setState({q: this.props.search}, () => {
+      this.state.q && this.search();
+    });
+
+    // setState and populate state.results when no props.search, but something present in hash
+    !this.props.search && window.location.hash && this.setState({q: window.location.hash.split('#')[1]}, () => {
+      this.state.q && this.search();
+    });
+
+    this.clock = false;
   }
 
   componentWillReceiveProps(newProps) {
     if(newProps.search && this.state.q !== newProps.search) {
-      this.setState({q: newProps.search});
-      // setTimeout because setstate is not always instantanious
-      setTimeout(() => {
+      this.setState({q: newProps.search}, () => {
         this.state.q && this.search();
-      }, 10)
+      });
     }
+  }
+
+  componentWillUnmount() {
+    this.props.clearSearch();
   }
 
   render() {
@@ -36,17 +44,15 @@ export class Search extends Component {
           <Link className='close-search'
                 to='/'>
           </Link>
-          <form onSubmit={ this.search }>
+          <form onSubmit={ this.updateHash }>
             <input value={ this.state.q }
                    onChange={ this.enterSearch }
                    placeholder='Search Books'
                    type='text' />
           </form>
         </div>
-        <div>
-          <h1>{ this.state.error }</h1>
-        </div>
         <div className='search-books-results'>
+          <h1>{ this.state.error }</h1>
           <Book books={ this.state.results }
                 changeShelf={ this.props.addBook }/>
         </div>
@@ -55,16 +61,29 @@ export class Search extends Component {
   }
 
   enterSearch = evt => {
-    this.setState({q: evt.target.value});
+    // clearTimeout so hash is not updated while typing
+    clearTimeout(this.clock);
+    this.setState({q: evt.target.value}, this.search);
   }
 
+  updateHash = evt => {
+    evt && evt.preventDefault();
+    clearTimeout(this.clock);
+    if(window.location.hash.split('#')[1] !== this.state.q.trim()) {
+      window.history.pushState(null, null, `#${this.state.q.trim()}`);
+    }
+  }
 
-
-  search = evt => {
-    evt && evt.preventDefault(); // Short circuit to prevent when called from component did mount
-    search(this.state.q, 20)
+  search = () => {
+    // Kill if empty query
+    if(!this.state.q.trim()) {
+      this.setState({results: []});
+      return;
+    }
+    this.state.q && search(this.state.q.trim(), 20)
     .then(res => {
-      if(!res.map) {
+      // If BooksApi returns anything other than array throw error and skip state updates
+      if(!Array.isArray(res)) {
         throw new Error('Bad response');
       }
       return res;
@@ -76,13 +95,13 @@ export class Search extends Component {
         }
         return newBook;
       }))
+    .then(res => {
+      this.setState({results: res, error: ''});
+      this.clock = window.setTimeout(this.updateHash, 5000)
+    })
     .catch(e => {
       console.log(e);
       this.setState({error: 'Failed to load resources'})
-    })
-    .then(res => {
-      this.setState({results: res});
-      evt && window.history.pushState(null, null, `#${this.state.q}`);
     })
   }
 }

@@ -68,3 +68,14 @@ export const search = (query, maxResults) =>
     })
     .then(res => res.json())
     .then(data => data.books)
+    .then(data => {
+      let unique = {};
+      return data.filter(book => {
+        if(!unique.hasOwnProperty(book.id)) {
+          unique[book.id] = true;
+          return true;
+        } else {
+          return false;
+        }
+      })
+    })

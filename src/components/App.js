@@ -5,6 +5,10 @@ import { Home } from './Home.js'
 import { Search } from './Search.js'
 import { get, getAll, update } from '../BooksApi.js';
 
+// Please note the changes I made to BooksApi.js for handling edge cases and errors.
+// The api was somewhat error prone as written (example: a search for 'react' returned more
+// than one entry with the same id)
+
 export class App extends Component {
 
   state = {
@@ -15,6 +19,8 @@ export class App extends Component {
   componentDidMount() {
     getAll().then(books => this.setState({books:books}));
     this.setState({search: window.location.hash.split('#')[1]})
+
+    // Event listener to sync url hash to state.query
     window.addEventListener('hashchange', evt => {
       this.setState({search: evt.newURL.split('#')[1]});
     });
@@ -24,17 +30,20 @@ export class App extends Component {
     return (
       <div>
         <Route exact path='/' render={props => (
-          <Home books={ this.state.books } changeShelf={ this.changeShelf }/>
+          <Home books={ this.state.books }
+                changeShelf={ this.changeShelf }/>
         )} />
         <Route path='/search' render={ props => (
           <Search addBook={ this.addBook }
                   books={ this.state.books }
-                  search={ this.state.search }/>
+                  search={ this.state.search }
+                  clearSearch={ this.clearSearch }/>
         )} />
       </div>
     );
   }
 
+  // Handles changing shelf || adding book from search page
   addBook = evt => {
     const id = evt.target.id;
     const val = evt.target.value;
@@ -49,7 +58,12 @@ export class App extends Component {
           })
         })
       } else {
-        this.changeShelf({id:id,value:val});
+        this.setState(state => {
+          return {books: state.books.map(book => {
+            book.shelf = book.id === id ? val : book.shelf;
+            return book;
+          })};
+        });
       }
     });
   }
@@ -64,5 +78,9 @@ export class App extends Component {
         return book;
       })};
     }));
+  }
+
+  clearSearch = () => {
+    this.setState({search: ''});
   }
 }
