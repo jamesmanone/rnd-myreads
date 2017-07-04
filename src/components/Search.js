@@ -10,6 +10,9 @@ export class Search extends Component {
     results: []
   }
 
+  // Stores timeout for automatic update of hash if form is not submitted
+  clock = false;
+
   // Search for previous on browser back
   componentDidMount() {
     // setState and populate state.results when App passes in props.search. Not sure this ever gets called
@@ -18,11 +21,9 @@ export class Search extends Component {
     });
 
     // setState and populate state.results when no props.search, but something present in hash
-    !this.props.search && window.location.hash && this.setState({q: window.location.hash.split('#')[1]}, () => {
+    !this.props.search && window.location.hash && this.setState({q: window.location.hash.split('#')[1].replace('+', ' ')}, () => {
       this.state.q && this.search();
     });
-
-    this.clock = false;
   }
 
   componentWillReceiveProps(newProps) {
@@ -70,7 +71,7 @@ export class Search extends Component {
     evt && evt.preventDefault();
     clearTimeout(this.clock);
     if(window.location.hash.split('#')[1] !== this.state.q.trim()) {
-      window.history.pushState(null, null, `#${this.state.q.trim()}`);
+      window.history.pushState(null, null, `#${this.state.q.trim().replace(' ', '+')}`);
     }
   }
 
@@ -90,13 +91,15 @@ export class Search extends Component {
     })
     .then(res =>
       res.map(newBook => {
-        if(this.props.books.filter(book => book.id === newBook.id).length) {
+        if(this.props.books.filter(book => book.id === newBook.id).length) {  // Sync result shelf with bookshelves if present
           newBook.shelf = this.props.books.filter(book => book.id === newBook.id)[0].shelf;
+        } else if(newBook.shelf !== 'none') {  // Book is not on shelf but came with a shelf.
+          newBook.shelf = 'none';  // Remove it.
         }
         return newBook;
       }))
     .then(res => {
-      this.setState({results: res, error: ''});
+      this.setState({results: res, error: ''});  // Add books to results array and clear any error messages
       this.clock = window.setTimeout(this.updateHash, 5000)
     })
     .catch(e => {
